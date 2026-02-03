@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: gameVault
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/gamevault
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+
+  flyway:
+    enabled: true
+
+#springdoc:
+#  api-docs:
+#    path: /api/api-docs
+#  swagger-ui:
+#    path: /swagger/index.html
+
+#gamevault:
+#  security:
+#    secret: "palavra-secreta"
