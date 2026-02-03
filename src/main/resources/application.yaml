@@ -15,12 +15,12 @@ spring:
   flyway:
     enabled: true
 
-#springdoc:
-#  api-docs:
-#    path: /api/api-docs
-#  swagger-ui:
-#    path: /swagger/index.html
+springdoc:
+  api-docs:
+    path: /api/api-docs
+  swagger-ui:
+    path: /swagger/index.html
 
-#gamevault:
-#  security:
-#    secret: "palavra-secreta"
+gamevault:
+  security:
+    secret: "palavra-secreta"
