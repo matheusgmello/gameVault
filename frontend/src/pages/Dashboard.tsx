@@ -6,12 +6,13 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import '../styles/Dashboard.css';
 
 import Catalog from './Catalog';
+import SimpleManager from './SimpleManager';
 
-const COLORS = ['#8b5cf6', '#10b981', '#f43f5e', '#3b82f6', '#f59e0b'];
+const COLORS = ['#a855f7', '#2dd4bf', '#fb7185', '#3b82f6', '#f59e0b'];
 
 const Dashboard: React.FC = () => {
   const { user, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<'stats' | 'games'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'games' | 'genres' | 'platforms'>('stats');
   const [stats, setStats] = useState({
     totalJogos: 0,
     totalGeneros: 0,
@@ -80,8 +81,18 @@ const Dashboard: React.FC = () => {
           >
             <Gamepad2 size={20} /> Meus Jogos
           </button>
-          <button><Layers size={20} /> Gêneros</button>
-          <button><Monitor size={20} /> Plataformas</button>
+          <button 
+            className={activeTab === 'genres' ? 'active' : ''} 
+            onClick={() => setActiveTab('genres')}
+          >
+            <Layers size={20} /> Gêneros
+          </button>
+          <button 
+            className={activeTab === 'platforms' ? 'active' : ''} 
+            onClick={() => setActiveTab('platforms')}
+          >
+            <Monitor size={20} /> Plataformas
+          </button>
         </nav>
         <div className="sidebar-footer">
           <button onClick={signOut} className="btn-logout">
@@ -91,7 +102,7 @@ const Dashboard: React.FC = () => {
       </aside>
 
       <main className="content">
-        {activeTab === 'stats' ? (
+        {activeTab === 'stats' && (
           <>
             <header className="content-header">
               <h1>Olá, {user?.nome}</h1>
@@ -166,9 +177,11 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
           </>
-        ) : (
-          <Catalog />
         )}
+
+        {activeTab === 'games' && <Catalog />}
+        {activeTab === 'genres' && <SimpleManager type="genero" title="Gêneros" />}
+        {activeTab === 'platforms' && <SimpleManager type="plataforma" title="Plataformas" />}
       </main>
     </div>
   );

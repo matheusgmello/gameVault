@@ -34,7 +34,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const storagedToken = localStorage.getItem('gamevault_token');
 
     if (storagedUser && storagedToken) {
-      setUser(JSON.parse(storagedUser));
+      try {
+        setUser(JSON.parse(storagedUser));
+      } catch (e) {
+        localStorage.removeItem('gamevault_user');
+        localStorage.removeItem('gamevault_token');
+      }
     }
     setLoading(false);
   }, []);
