@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { LogIn } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import '../styles/Login.css';
 
 const Login: React.FC = () => {
@@ -49,6 +50,12 @@ const Login: React.FC = () => {
           </div>
           <button type="submit" className="btn-primary">Entrar</button>
         </form>
+
+        <div className="auth-footer" style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+            Não tem uma conta? <Link to="/registrar" style={{ color: 'var(--primary)', fontWeight: '600' }}>Cadastre-se</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

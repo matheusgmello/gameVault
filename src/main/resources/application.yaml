@@ -3,7 +3,7 @@ spring:
     name: gameVault
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/gamevault
+    url: jdbc:postgresql://localhost:5433/gamevault
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -17,9 +17,9 @@ spring:
 
 springdoc:
   api-docs:
-    path: /api/api-docs
+    path: /v3/api-docs
   swagger-ui:
-    path: /swagger/index.html
+    path: /swagger-ui.html
 
 gamevault:
   security:
