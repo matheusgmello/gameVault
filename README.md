@@ -1,8 +1,9 @@
+![Preview do Projeto](img/preview.png)
+
 # GameVault
 
 API REST para cadastro de catálogo de Genero e Plataformas de Jogos, desenvolvida com Java e Spring Boot, agora com interface visual moderna em React.
 
-![Preview do Projeto](./preview.png)
 
 ## Sumário
 
