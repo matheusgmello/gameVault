@@ -1,10 +1,18 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import api from '../services/api';
+import { jwtDecode } from 'jwt-decode';
 
 interface User {
   id: number;
   nome: string;
   email: string;
+}
+
+interface JWTPayload {
+  usuarioId: number;
+  nome: string;
+  sub: string;
+  exp: number;
 }
 
 interface AuthContextData {
@@ -33,8 +41,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   async function signIn(email: string, senha: string) {
     const response = await api.post('/gamevault/auth/login', { email, senha });
+    const { token } = response.data;
 
-    const { token, usuario } = response.data;
+    const decoded = jwtDecode<JWTPayload>(token);
+    
+    const usuario: User = {
+      id: decoded.usuarioId,
+      nome: decoded.nome,
+      email: decoded.sub
+    };
 
     setUser(usuario);
     localStorage.setItem('gamevault_user', JSON.stringify(usuario));
