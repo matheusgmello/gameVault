@@ -28,6 +28,7 @@ interface JogoResponse {
   titulo: string;
   descricao?: string;
   dataLancamento?: string;
+  capaUrl?: string;
   nota: number;
   status: GameStatus;
   favorito: boolean;
@@ -47,6 +48,7 @@ const Catalog: React.FC = () => {
   // Form State
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
+  const [capaUrl, setCapaUrl] = useState('');
   const [nota, setNota] = useState(5);
   const [dataLancamento, setDataLancamento] = useState('');
   const [status, setStatus] = useState<GameStatus>('WISHLIST');
@@ -95,6 +97,7 @@ const Catalog: React.FC = () => {
       await api.post('/gamevault/jogo', {
         titulo,
         descricao,
+        capaUrl,
         nota,
         dataLancamento,
         status,
@@ -122,6 +125,7 @@ const Catalog: React.FC = () => {
   function resetForm() {
     setTitulo('');
     setDescricao('');
+    setCapaUrl('');
     setNota(5);
     setDataLancamento('');
     setStatus('WISHLIST');
@@ -157,9 +161,13 @@ const Catalog: React.FC = () => {
         {filteredJogos.map(jogo => (
           <div key={jogo.id} className="game-card">
             <div className="game-cover">
-              <div className="placeholder-cover">
-                {jogo.titulo.substring(0, 2).toUpperCase()}
-              </div>
+              {jogo.capaUrl ? (
+                <img className="game-cover-image" src={jogo.capaUrl} alt={`Capa de ${jogo.titulo}`} />
+              ) : (
+                <div className="placeholder-cover">
+                  {jogo.titulo.substring(0, 2).toUpperCase()}
+                </div>
+              )}
               <div className="game-badge">{jogo.nota.toFixed(1)}</div>
               {jogo.favorito && (
                 <div className="favorite-badge">
@@ -205,6 +213,10 @@ const Catalog: React.FC = () => {
           <div className="form-group">
             <label>Descrição</label>
             <textarea value={descricao} onChange={e => setDescricao(e.target.value)} rows={3} />
+          </div>
+          <div className="form-group">
+            <label>URL da capa</label>
+            <input value={capaUrl} onChange={e => setCapaUrl(e.target.value)} placeholder="https://..." />
           </div>
           <div className="form-group">
             <label>Review pessoal</label>

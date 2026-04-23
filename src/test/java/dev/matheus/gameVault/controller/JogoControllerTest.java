@@ -100,6 +100,7 @@ class JogoControllerTest {
                 "Final Fantasy VII Rebirth",
                 "Incrível RPG",
                 LocalDate.now(),
+                "https://example.com/ff7.jpg",
                 9.8,
                 JogoStatus.JOGANDO,
                 true,
@@ -115,6 +116,7 @@ class JogoControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.titulo").value("Final Fantasy VII Rebirth"))
+                .andExpect(jsonPath("$.capaUrl").value("https://example.com/ff7.jpg"))
                 .andExpect(jsonPath("$.nota").value(9.8))
                 .andExpect(jsonPath("$.status").value("JOGANDO"))
                 .andExpect(jsonPath("$.favorito").value(true))

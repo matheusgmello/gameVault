@@ -52,6 +52,7 @@ class JogoServiceTest {
                 .titulo("Elden Ring")
                 .descricao("RPG de Ação")
                 .dataLancamento(LocalDate.now())
+                .capaUrl("https://example.com/elden-ring.jpg")
                 .nota(9.5)
                 .status(JogoStatus.JOGANDO)
                 .favorito(true)
@@ -74,6 +75,7 @@ class JogoServiceTest {
 
         assertThat(resultado).isNotNull();
         assertThat(resultado.getTitulo()).isEqualTo("Elden Ring");
+        assertThat(resultado.getCapaUrl()).isEqualTo("https://example.com/elden-ring.jpg");
         assertThat(jogo.getUsuario().getId()).isEqualTo(usuario.getId());
         assertThat(resultado.getStatus()).isEqualTo(JogoStatus.JOGANDO);
         assertThat(resultado.getFavorito()).isTrue();
@@ -110,6 +112,7 @@ class JogoServiceTest {
                 .titulo("Elden Ring Shadow of the Erdtree")
                 .descricao("Expansão")
                 .dataLancamento(LocalDate.now())
+                .capaUrl("https://example.com/shadow.jpg")
                 .nota(10.0)
                 .status(JogoStatus.ZERADO)
                 .favorito(false)
@@ -129,6 +132,7 @@ class JogoServiceTest {
 
         assertThat(resultado).isPresent();
         assertThat(resultado.get().getTitulo()).isEqualTo("Elden Ring Shadow of the Erdtree");
+        assertThat(resultado.get().getCapaUrl()).isEqualTo("https://example.com/shadow.jpg");
         assertThat(resultado.get().getStatus()).isEqualTo(JogoStatus.ZERADO);
         assertThat(resultado.get().getFavorito()).isFalse();
         assertThat(resultado.get().getReview()).isEqualTo("DLC finalizada.");

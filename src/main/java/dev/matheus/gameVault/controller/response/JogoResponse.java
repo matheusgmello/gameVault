@@ -19,6 +19,8 @@ public record JogoResponse(
         @Schema(type = "string", format = "yyyy-MM-dd", description = "Data de lançamento do Jogo")
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
         LocalDate dataLancamento,
+        @Schema(type = "string", description = "URL da capa do jogo")
+        String capaUrl,
         @Schema(type = "number", format = "double", description = "Avaliação do Jogo")
         double nota,
         @Schema(type = "string", description = "Status pessoal do jogo na biblioteca")

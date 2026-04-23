@@ -21,6 +21,9 @@ public record JogoRequest(
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
         LocalDate dataLancamento,
 
+        @Schema(type = "string", description = "URL da capa do jogo")
+        String capaUrl,
+
         @Schema(type = "number", format = "double", description = "Avaliação do jogo (nota)")
         double nota,
 

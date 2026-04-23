@@ -27,6 +27,9 @@ public class Jogo {
     @Column(name = "data_lancamento")
     private LocalDate dataLancamento;
 
+    @Column(name = "capa_url", length = 1000)
+    private String capaUrl;
+
     private Double nota;
 
     @Enumerated(EnumType.STRING)

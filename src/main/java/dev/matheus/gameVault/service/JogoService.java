@@ -46,6 +46,7 @@ public class JogoService {
             jogo.setTitulo(jogoAtualizado.getTitulo());
             jogo.setDescricao(jogoAtualizado.getDescricao());
             jogo.setDataLancamento(jogoAtualizado.getDataLancamento());
+            jogo.setCapaUrl(jogoAtualizado.getCapaUrl());
             jogo.setNota(jogoAtualizado.getNota());
             jogo.setStatus(jogoAtualizado.getStatus());
             jogo.setFavorito(jogoAtualizado.getFavorito());
