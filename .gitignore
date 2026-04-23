@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Markdown Files ###
+codex.md
+claude.md
+gemini.md
+
+### Skills ###
+skills
