@@ -7,11 +7,19 @@
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: var(--background);
+  font-family: "Bahnschrift", "Trebuchet MS", sans-serif;
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.08), transparent 34%),
+    linear-gradient(315deg, rgba(255, 122, 89, 0.11), transparent 32%),
+    var(--background);
   color: var(--text);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--ink);
 }
 
 button {
@@ -20,6 +28,15 @@ button {
   border-radius: var(--radius);
   font-weight: 500;
   transition: var(--transition);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(15, 118, 110, 0.22);
+  outline-offset: 2px;
 }
 
 a {
@@ -35,12 +52,15 @@ input, select, textarea {
   background-color: var(--surface);
   border: 1px solid var(--border);
   color: var(--text);
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   border-radius: var(--radius);
   width: 100%;
 }
 
-input:focus {
+input:focus,
+textarea:focus,
+select:focus {
   outline: none;
   border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
 }

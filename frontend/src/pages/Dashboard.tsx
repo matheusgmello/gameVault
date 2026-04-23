@@ -8,7 +8,24 @@ import '../styles/Dashboard.css';
 import Catalog from './Catalog';
 import SimpleManager from './SimpleManager';
 
-const COLORS = ['#a855f7', '#2dd4bf', '#fb7185', '#3b82f6', '#f59e0b'];
+const COLORS = ['#0f766e', '#ff7a59', '#d9466b', '#2f6f95', '#c59b2c'];
+
+interface PlataformaResponse {
+  id: number;
+  nome: string;
+}
+
+interface JogoResponse {
+  id: number;
+  titulo: string;
+  nota: number;
+  plataformas: PlataformaResponse[];
+}
+
+interface ChartItem {
+  name: string;
+  value: number;
+}
 
 const Dashboard: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -19,7 +36,7 @@ const Dashboard: React.FC = () => {
     totalPlataformas: 0,
     avgNota: 0,
   });
-  const [chartData, setChartData] = useState<any[]>([]);
+  const [chartData, setChartData] = useState<ChartItem[]>([]);
 
   useEffect(() => {
     async function loadStats() {
@@ -30,19 +47,23 @@ const Dashboard: React.FC = () => {
           api.get('/gamevault/plataforma'),
         ]);
 
-        const totalJogos = jogos.data.length;
-        const totalGeneros = generos.data.length;
-        const totalPlataformas = plataformas.data.length;
+        const jogosData = jogos.data as JogoResponse[];
+        const generosData = generos.data as unknown[];
+        const plataformasData = plataformas.data as unknown[];
+
+        const totalJogos = jogosData.length;
+        const totalGeneros = generosData.length;
+        const totalPlataformas = plataformasData.length;
         const avgNota = totalJogos > 0 
-          ? jogos.data.reduce((acc: number, j: any) => acc + j.nota, 0) / totalJogos 
+          ? jogosData.reduce((acc, j) => acc + j.nota, 0) / totalJogos
           : 0;
 
         setStats({ totalJogos, totalGeneros, totalPlataformas, avgNota });
 
         // Agrupar por plataforma para o gráfico
-        const platMap: any = {};
-        jogos.data.forEach((j: any) => {
-          j.plataformas.forEach((p: any) => {
+        const platMap: Record<string, number> = {};
+        jogosData.forEach((j) => {
+          j.plataformas.forEach((p) => {
             platMap[p.nome] = (platMap[p.nome] || 0) + 1;
           });
         });
@@ -65,7 +86,7 @@ const Dashboard: React.FC = () => {
     <div className="dashboard-layout">
       <aside className="sidebar">
         <div className="sidebar-header">
-          <Gamepad2 color="#8b5cf6" size={32} />
+          <Gamepad2 color="#0f766e" size={32} />
           <span>GameVault</span>
         </div>
         <nav className="sidebar-nav">
@@ -167,11 +188,11 @@ const Dashboard: React.FC = () => {
                 <h3>Distribuição</h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                    <XAxis dataKey="name" stroke="#94a3b8" />
-                    <YAxis stroke="#94a3b8" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#dedbd0" />
+                    <XAxis dataKey="name" stroke="#68736f" />
+                    <YAxis stroke="#68736f" />
                     <Tooltip />
-                    <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="value" fill="#0f766e" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

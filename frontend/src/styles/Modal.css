@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: rgba(24, 33, 31, 0.32);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -15,11 +15,11 @@
 
 .modal-content {
   background-color: var(--surface);
-  border-radius: 1.5rem;
+  border-radius: var(--radius);
   width: 100%;
   max-width: 600px;
   border: 1px solid var(--border);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow);
   animation: modalScale 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -39,7 +39,7 @@
 .modal-header h2 {
   font-size: 1.5rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--ink);
 }
 
 .btn-close {
@@ -49,7 +49,7 @@
 }
 
 .btn-close:hover {
-  color: #fff;
+  color: var(--ink);
   background-color: var(--surface-alt);
 }
 
@@ -66,13 +66,17 @@
 
 .btn-cancel {
   background-color: var(--surface-alt);
-  color: #fff;
+  color: var(--text);
   padding: 0.75rem 1.5rem;
 }
 
 .btn-save {
-  background: linear-gradient(to right, var(--primary), var(--primary-hover));
+  background: var(--primary);
   color: #fff;
   padding: 0.75rem 2rem;
   font-weight: 700;
+}
+
+.btn-save:hover {
+  background: var(--primary-hover);
 }

@@ -8,19 +8,34 @@ interface SimpleManagerProps {
   title: string;
 }
 
+interface ManagedItem {
+  id: number;
+  nome: string;
+}
+
 const SimpleManager: React.FC<SimpleManagerProps> = ({ type, title }) => {
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<ManagedItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [nome, setNome] = useState('');
 
-  useEffect(() => {
-    loadData();
-  }, [type]);
-
-  async function loadData() {
+  const loadData = React.useCallback(async () => {
     const res = await api.get(`/gamevault/${type}`);
     setItems(res.data);
-  }
+  }, [type]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    api.get(`/gamevault/${type}`).then((res) => {
+      if (mounted) {
+        setItems(res.data);
+      }
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [type]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,8 +43,8 @@ const SimpleManager: React.FC<SimpleManagerProps> = ({ type, title }) => {
       await api.post(`/gamevault/${type}`, { nome });
       setIsModalOpen(false);
       setNome('');
-      loadData();
-    } catch (error) {
+      void loadData();
+    } catch {
       alert(`Erro ao salvar ${type}`);
     }
   }
@@ -38,9 +53,9 @@ const SimpleManager: React.FC<SimpleManagerProps> = ({ type, title }) => {
     if (window.confirm(`Deseja excluir este(a) ${type}?`)) {
       try {
         await api.delete(`/gamevault/${type}/${id}`);
-        loadData();
-      } catch (error) {
-        alert('Não é possível excluir: existem jogos vinculados.');
+        void loadData();
+      } catch {
+        alert('Nao e possivel excluir: existem jogos vinculados.');
       }
     }
   }
@@ -55,7 +70,7 @@ const SimpleManager: React.FC<SimpleManagerProps> = ({ type, title }) => {
       </header>
 
       <div className="games-grid">
-        {items.map(item => (
+        {items.map((item) => (
           <div key={item.id} className="game-card" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '1.25rem', fontWeight: 700 }}>{item.nome}</span>
             <button className="btn-logout" style={{ width: 'auto', padding: '0.5rem' }} onClick={() => handleDelete(item.id)}>
@@ -65,15 +80,15 @@ const SimpleManager: React.FC<SimpleManagerProps> = ({ type, title }) => {
         ))}
       </div>
 
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         title={`Adicionar ${title}`}
       >
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Nome</label>
-            <input value={nome} onChange={e => setNome(e.target.value)} required />
+            <input value={nome} onChange={(e) => setNome(e.target.value)} required />
           </div>
           <div className="form-actions">
             <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>

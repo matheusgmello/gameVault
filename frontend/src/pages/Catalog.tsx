@@ -4,10 +4,30 @@ import { Search, Plus, Trash2 } from 'lucide-react';
 import Modal from '../components/Modal';
 import '../styles/Catalog.css';
 
+interface GeneroResponse {
+  id: number;
+  nome: string;
+}
+
+interface PlataformaResponse {
+  id: number;
+  nome: string;
+}
+
+interface JogoResponse {
+  id: number;
+  titulo: string;
+  descricao?: string;
+  dataLancamento?: string;
+  nota: number;
+  generos: GeneroResponse[];
+  plataformas: PlataformaResponse[];
+}
+
 const Catalog: React.FC = () => {
-  const [jogos, setJogos] = useState<any[]>([]);
-  const [generos, setGeneros] = useState<any[]>([]);
-  const [plataformas, setPlataformas] = useState<any[]>([]);
+  const [jogos, setJogos] = useState<JogoResponse[]>([]);
+  const [generos, setGeneros] = useState<GeneroResponse[]>([]);
+  const [plataformas, setPlataformas] = useState<PlataformaResponse[]>([]);
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -19,11 +39,7 @@ const Catalog: React.FC = () => {
   const [selectedGeneros, setSelectedGeneros] = useState<number[]>([]);
   const [selectedPlataformas, setSelectedPlataformas] = useState<number[]>([]);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  async function loadData() {
+  const loadData = React.useCallback(async () => {
     const [resJogos, resGeneros, resPlats] = await Promise.all([
       api.get('/gamevault/jogo'),
       api.get('/gamevault/genero'),
@@ -32,7 +48,29 @@ const Catalog: React.FC = () => {
     setJogos(resJogos.data);
     setGeneros(resGeneros.data);
     setPlataformas(resPlats.data);
-  }
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    Promise.all([
+      api.get('/gamevault/jogo'),
+      api.get('/gamevault/genero'),
+      api.get('/gamevault/plataforma'),
+    ]).then(([resJogos, resGeneros, resPlats]) => {
+      if (!mounted) {
+        return;
+      }
+
+      setJogos(resJogos.data);
+      setGeneros(resGeneros.data);
+      setPlataformas(resPlats.data);
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,9 +84,9 @@ const Catalog: React.FC = () => {
         plataformas: selectedPlataformas
       });
       setIsModalOpen(false);
-      loadData();
+      void loadData();
       resetForm();
-    } catch (error) {
+    } catch {
       alert('Erro ao salvar jogo');
     }
   }
@@ -56,7 +94,7 @@ const Catalog: React.FC = () => {
   async function handleDelete(id: number) {
     if (window.confirm('Deseja realmente excluir este jogo?')) {
       await api.delete(`/gamevault/jogo/${id}`);
-      loadData();
+      void loadData();
     }
   }
 
@@ -104,9 +142,9 @@ const Catalog: React.FC = () => {
             </div>
             <div className="game-info">
               <h3>{jogo.titulo}</h3>
-              <p>{jogo.generos.map((g: any) => g.nome).join(', ')}</p>
+              <p>{jogo.generos.map((g) => g.nome).join(', ')}</p>
               <div className="game-platforms">
-                {jogo.plataformas.map((p: any) => (
+                {jogo.plataformas.map((p) => (
                   <span key={p.id} className="btn-tag">{p.nome}</span>
                 ))}
               </div>
