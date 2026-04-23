@@ -3,6 +3,7 @@ package dev.matheus.gameVault.service;
 import dev.matheus.gameVault.entity.Genero;
 import dev.matheus.gameVault.entity.Jogo;
 import dev.matheus.gameVault.entity.Plataforma;
+import dev.matheus.gameVault.entity.Usuario;
 import dev.matheus.gameVault.repository.JogoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,27 +21,28 @@ public class JogoService {
     private final GeneroService generoService;
     private final PlataformaService plataformaService;
 
-    public Jogo salvar(Jogo jogo) {
+    public Jogo salvar(Jogo jogo, Long usuarioId) {
+        jogo.setUsuario(Usuario.builder().id(usuarioId).build());
         jogo.setGeneros(this.validarGeneros(jogo.getGeneros()));
         jogo.setPlataformas(this.validarPlataformas(jogo.getPlataformas()));
         return jogoRepository.save(jogo);
     }
 
-    public List<Jogo> buscarTodos() {
-        return jogoRepository.findAll();
+    public List<Jogo> buscarTodos(Long usuarioId) {
+        return jogoRepository.findByUsuarioId(usuarioId);
     }
 
-    public Optional<Jogo> buscarPorId(Long id) {
-        return jogoRepository.findById(id);
+    public Optional<Jogo> buscarPorId(Long id, Long usuarioId) {
+        return jogoRepository.findByIdAndUsuarioId(id, usuarioId);
     }
 
-    public List<Jogo> buscarPorGenero(Long generoId) {
+    public List<Jogo> buscarPorGenero(Long generoId, Long usuarioId) {
         Genero genero = Genero.builder().id(generoId).build();
-        return jogoRepository.findByGenerosContaining(genero);
+        return jogoRepository.findByGenerosContainingAndUsuarioId(genero, usuarioId);
     }
 
-    public Optional<Jogo> atualizar(Long id, Jogo jogoAtualizado) {
-        return jogoRepository.findById(id).map(jogo -> {
+    public Optional<Jogo> atualizar(Long id, Long usuarioId, Jogo jogoAtualizado) {
+        return jogoRepository.findByIdAndUsuarioId(id, usuarioId).map(jogo -> {
             jogo.setTitulo(jogoAtualizado.getTitulo());
             jogo.setDescricao(jogoAtualizado.getDescricao());
             jogo.setDataLancamento(jogoAtualizado.getDataLancamento());
@@ -56,8 +58,9 @@ public class JogoService {
         });
     }
 
-    public void deletar(Long id) {
-        jogoRepository.deleteById(id);
+    public void deletar(Long id, Long usuarioId) {
+        jogoRepository.findByIdAndUsuarioId(id, usuarioId)
+                .ifPresent(jogoRepository::delete);
     }
 
     private Set<Genero> validarGeneros(Set<Genero> generos) {

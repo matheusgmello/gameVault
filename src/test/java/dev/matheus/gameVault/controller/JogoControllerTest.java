@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.matheus.gameVault.config.TokenService;
 import dev.matheus.gameVault.controller.request.JogoRequest;
 import dev.matheus.gameVault.entity.Genero;
+import dev.matheus.gameVault.entity.Jogo;
 import dev.matheus.gameVault.entity.Plataforma;
 import dev.matheus.gameVault.entity.Usuario;
 import dev.matheus.gameVault.repository.GeneroRepository;
@@ -53,6 +54,8 @@ class JogoControllerTest {
     private ObjectMapper objectMapper;
 
     private String token;
+    private Usuario usuario;
+    private Usuario outroUsuario;
     private Genero genero;
     private Plataforma plataforma;
 
@@ -66,12 +69,19 @@ class JogoControllerTest {
         plataformaRepository.deleteAll();
         usuarioRepository.deleteAll();
 
-        Usuario usuario = Usuario.builder()
+        usuario = Usuario.builder()
                 .nome("Admin")
                 .email("admin@test.com")
                 .senha("senha")
                 .build();
-        usuarioRepository.save(usuario);
+        usuario = usuarioRepository.save(usuario);
+
+        outroUsuario = Usuario.builder()
+                .nome("Outro Jogador")
+                .email("outro@test.com")
+                .senha("senha")
+                .build();
+        outroUsuario = usuarioRepository.save(outroUsuario);
 
         token = tokenService.gerarToken(usuario);
 
@@ -109,6 +119,26 @@ class JogoControllerTest {
         mockMvc.perform(get("/gamevault/jogo")
                 .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Deve listar apenas jogos do usuario autenticado")
+    void deveListarApenasJogosDoUsuarioAutenticado() throws Exception {
+        Jogo jogoOutroUsuario = Jogo.builder()
+                .titulo("Jogo Privado")
+                .descricao("Nao deve aparecer para outro usuario")
+                .dataLancamento(LocalDate.now())
+                .nota(8.5)
+                .usuario(outroUsuario)
+                .generos(Set.of(genero))
+                .plataformas(Set.of(plataforma))
+                .build();
+        jogoRepository.save(jogoOutroUsuario);
+
+        mockMvc.perform(get("/gamevault/jogo")
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
     }
 
     @Test

@@ -1,5 +1,6 @@
 package dev.matheus.gameVault.controller;
 
+import dev.matheus.gameVault.config.JWTUserData;
 import dev.matheus.gameVault.controller.request.JogoRequest;
 import dev.matheus.gameVault.controller.response.JogoResponse;
 import dev.matheus.gameVault.entity.Jogo;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,39 +28,44 @@ public class JogoController {
 
     @Operation(summary = "Salvar Jogo", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping
-    public ResponseEntity<JogoResponse> salvar(@Valid @RequestBody JogoRequest request) {
-        Jogo jogoSalvo = jogoService.salvar(JogoMapper.toJogo(request));
+    public ResponseEntity<JogoResponse> salvar(@AuthenticationPrincipal JWTUserData usuario,
+                                               @Valid @RequestBody JogoRequest request) {
+        Jogo jogoSalvo = jogoService.salvar(JogoMapper.toJogo(request), usuario.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(JogoMapper.toJogoResponse(jogoSalvo));
     }
 
     @Operation(summary = "Listar todos os Jogos", security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping
-    public ResponseEntity<List<JogoResponse>> buscarTodos() {
-        return ResponseEntity.ok(jogoService.buscarTodos().stream()
+    public ResponseEntity<List<JogoResponse>> buscarTodos(@AuthenticationPrincipal JWTUserData usuario) {
+        return ResponseEntity.ok(jogoService.buscarTodos(usuario.id()).stream()
                 .map(JogoMapper::toJogoResponse).toList());
     }
 
     @Operation(summary = "Atualizar Jogo", security = @SecurityRequirement(name = "bearerAuth"))
     @PutMapping("/{id}")
-    public ResponseEntity<JogoResponse> atualizar(@PathVariable Long id, @Valid @RequestBody JogoRequest request) {
-        return jogoService.atualizar(id, JogoMapper.toJogo(request))
+    public ResponseEntity<JogoResponse> atualizar(@AuthenticationPrincipal JWTUserData usuario,
+                                                  @PathVariable Long id,
+                                                  @Valid @RequestBody JogoRequest request) {
+        return jogoService.atualizar(id, usuario.id(), JogoMapper.toJogo(request))
                 .map(jogo -> ResponseEntity.ok(JogoMapper.toJogoResponse(jogo)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @Operation(summary = "Buscar Jogos por Gênero", security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/busca")
-    public ResponseEntity<List<JogoResponse>> buscarPorGenero(@RequestParam Long generoId) {
-        return ResponseEntity.ok(jogoService.buscarPorGenero(generoId).stream()
+    public ResponseEntity<List<JogoResponse>> buscarPorGenero(@AuthenticationPrincipal JWTUserData usuario,
+                                                              @RequestParam Long generoId) {
+        return ResponseEntity.ok(jogoService.buscarPorGenero(generoId, usuario.id()).stream()
                 .map(JogoMapper::toJogoResponse).toList());
     }
 
     @Operation(summary = "Deletar Jogo", security = @SecurityRequirement(name = "bearerAuth"))
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        return jogoService.buscarPorId(id)
+    public ResponseEntity<Void> deletar(@AuthenticationPrincipal JWTUserData usuario,
+                                        @PathVariable Long id) {
+        return jogoService.buscarPorId(id, usuario.id())
                 .map(j -> {
-                    jogoService.deletar(id);
+                    jogoService.deletar(id, usuario.id());
                     return ResponseEntity.noContent().<Void>build();
                 })
                 .orElse(ResponseEntity.notFound().build());
