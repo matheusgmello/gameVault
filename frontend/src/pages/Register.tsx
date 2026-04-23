@@ -16,7 +16,7 @@ const Register: React.FC = () => {
       await api.post('/gamevault/auth/registrar', { nome, email, senha });
       alert('Usuário cadastrado com sucesso!');
       navigate('/login');
-    } catch (error) {
+    } catch {
       alert('Falha no cadastro. Verifique os dados ou se o e-mail já existe.');
     }
   }

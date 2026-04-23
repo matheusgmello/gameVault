@@ -15,7 +15,7 @@ const Login: React.FC = () => {
     try {
       await signIn(email, senha);
       navigate('/');
-    } catch (error) {
+    } catch {
       alert('Falha no login, verifique suas credenciais.');
     }
   }

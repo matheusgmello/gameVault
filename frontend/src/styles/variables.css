@@ -1,17 +1,22 @@
 :root {
-  --background: #0b0f1a;
-  --surface: #161b2c;
-  --surface-alt: #232a42;
-  --primary: #a855f7;
-  --primary-hover: #9333ea;
-  --secondary: #2dd4bf;
-  --secondary-hover: #14b8a6;
-  --accent: #fb7185;
-  --text: #f8fafc;
-  --text-muted: #94a3b8;
-  --border: rgba(255, 255, 255, 0.08);
-  --radius: 12px;
-  --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
-  --glass: rgba(22, 27, 44, 0.7);
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --background: #f8f7f2;
+  --background-strong: #ffffff;
+  --surface: #ffffff;
+  --surface-alt: #f0eee6;
+  --surface-tint: #e6f6f3;
+  --primary: #0f766e;
+  --primary-hover: #115e59;
+  --secondary: #ff7a59;
+  --secondary-hover: #e85f3d;
+  --accent: #d9466b;
+  --ink: #18211f;
+  --text: #24302d;
+  --text-muted: #68736f;
+  --border: #dedbd0;
+  --border-strong: #c9c4b6;
+  --radius: 8px;
+  --shadow: 0 18px 45px rgba(40, 54, 49, 0.12), 0 4px 12px rgba(40, 54, 49, 0.08);
+  --shadow-soft: 0 10px 30px rgba(40, 54, 49, 0.08);
+  --glass: rgba(255, 255, 255, 0.82);
+  --transition: all 0.22s ease;
 }
