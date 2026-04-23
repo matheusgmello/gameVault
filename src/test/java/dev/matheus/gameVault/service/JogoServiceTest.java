@@ -2,6 +2,7 @@ package dev.matheus.gameVault.service;
 
 import dev.matheus.gameVault.entity.Genero;
 import dev.matheus.gameVault.entity.Jogo;
+import dev.matheus.gameVault.entity.JogoStatus;
 import dev.matheus.gameVault.entity.Plataforma;
 import dev.matheus.gameVault.entity.Usuario;
 import dev.matheus.gameVault.repository.JogoRepository;
@@ -52,6 +53,10 @@ class JogoServiceTest {
                 .descricao("RPG de Ação")
                 .dataLancamento(LocalDate.now())
                 .nota(9.5)
+                .status(JogoStatus.JOGANDO)
+                .favorito(true)
+                .review("Uma jornada excelente.")
+                .horasJogadas(80)
                 .usuario(usuario)
                 .generos(new HashSet<>(Collections.singletonList(genero)))
                 .plataformas(new HashSet<>(Collections.singletonList(plataforma)))
@@ -70,6 +75,9 @@ class JogoServiceTest {
         assertThat(resultado).isNotNull();
         assertThat(resultado.getTitulo()).isEqualTo("Elden Ring");
         assertThat(jogo.getUsuario().getId()).isEqualTo(usuario.getId());
+        assertThat(resultado.getStatus()).isEqualTo(JogoStatus.JOGANDO);
+        assertThat(resultado.getFavorito()).isTrue();
+        assertThat(resultado.getHorasJogadas()).isEqualTo(80);
         verify(jogoRepository, times(1)).save(any(Jogo.class));
     }
 
@@ -103,6 +111,10 @@ class JogoServiceTest {
                 .descricao("Expansão")
                 .dataLancamento(LocalDate.now())
                 .nota(10.0)
+                .status(JogoStatus.ZERADO)
+                .favorito(false)
+                .review("DLC finalizada.")
+                .horasJogadas(100)
                 .usuario(usuario)
                 .generos(new HashSet<>(Collections.singletonList(genero)))
                 .plataformas(new HashSet<>(Collections.singletonList(plataforma)))
@@ -117,6 +129,10 @@ class JogoServiceTest {
 
         assertThat(resultado).isPresent();
         assertThat(resultado.get().getTitulo()).isEqualTo("Elden Ring Shadow of the Erdtree");
+        assertThat(resultado.get().getStatus()).isEqualTo(JogoStatus.ZERADO);
+        assertThat(resultado.get().getFavorito()).isFalse();
+        assertThat(resultado.get().getReview()).isEqualTo("DLC finalizada.");
+        assertThat(resultado.get().getHorasJogadas()).isEqualTo(100);
         verify(jogoRepository, times(1)).save(any(Jogo.class));
     }
 

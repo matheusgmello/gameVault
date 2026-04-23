@@ -29,6 +29,20 @@ public class Jogo {
 
     private Double nota;
 
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private JogoStatus status = JogoStatus.WISHLIST;
+
+    @Builder.Default
+    private Boolean favorito = false;
+
+    @Column(columnDefinition = "TEXT")
+    private String review;
+
+    @Column(name = "horas_jogadas")
+    @Builder.Default
+    private Integer horasJogadas = 0;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;

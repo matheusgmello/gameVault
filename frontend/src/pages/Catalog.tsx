@@ -1,8 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
-import { Search, Plus, Trash2 } from 'lucide-react';
+import { Clock, Heart, Plus, Search, Trash2 } from 'lucide-react';
 import Modal from '../components/Modal';
 import '../styles/Catalog.css';
+
+type GameStatus = 'WISHLIST' | 'JOGANDO' | 'ZERADO' | 'ABANDONADO';
+
+const STATUS_LABELS: Record<GameStatus, string> = {
+  WISHLIST: 'Wishlist',
+  JOGANDO: 'Jogando',
+  ZERADO: 'Zerado',
+  ABANDONADO: 'Abandonado',
+};
 
 interface GeneroResponse {
   id: number;
@@ -20,6 +29,10 @@ interface JogoResponse {
   descricao?: string;
   dataLancamento?: string;
   nota: number;
+  status: GameStatus;
+  favorito: boolean;
+  review?: string;
+  horasJogadas: number;
   generos: GeneroResponse[];
   plataformas: PlataformaResponse[];
 }
@@ -36,6 +49,10 @@ const Catalog: React.FC = () => {
   const [descricao, setDescricao] = useState('');
   const [nota, setNota] = useState(5);
   const [dataLancamento, setDataLancamento] = useState('');
+  const [status, setStatus] = useState<GameStatus>('WISHLIST');
+  const [favorito, setFavorito] = useState(false);
+  const [review, setReview] = useState('');
+  const [horasJogadas, setHorasJogadas] = useState(0);
   const [selectedGeneros, setSelectedGeneros] = useState<number[]>([]);
   const [selectedPlataformas, setSelectedPlataformas] = useState<number[]>([]);
 
@@ -80,6 +97,10 @@ const Catalog: React.FC = () => {
         descricao,
         nota,
         dataLancamento,
+        status,
+        favorito,
+        review,
+        horasJogadas,
         generos: selectedGeneros,
         plataformas: selectedPlataformas
       });
@@ -103,6 +124,10 @@ const Catalog: React.FC = () => {
     setDescricao('');
     setNota(5);
     setDataLancamento('');
+    setStatus('WISHLIST');
+    setFavorito(false);
+    setReview('');
+    setHorasJogadas(0);
     setSelectedGeneros([]);
     setSelectedPlataformas([]);
   }
@@ -136,13 +161,27 @@ const Catalog: React.FC = () => {
                 {jogo.titulo.substring(0, 2).toUpperCase()}
               </div>
               <div className="game-badge">{jogo.nota.toFixed(1)}</div>
+              {jogo.favorito && (
+                <div className="favorite-badge">
+                  <Heart size={16} fill="currentColor" />
+                </div>
+              )}
               <button className="btn-delete-game" onClick={() => handleDelete(jogo.id)}>
                 <Trash2 size={18} />
               </button>
             </div>
             <div className="game-info">
+              <div className="game-meta-row">
+                <span className={`status-chip status-${jogo.status.toLowerCase()}`}>
+                  {STATUS_LABELS[jogo.status]}
+                </span>
+                <span className="hours-chip">
+                  <Clock size={14} /> {jogo.horasJogadas}h
+                </span>
+              </div>
               <h3>{jogo.titulo}</h3>
               <p>{jogo.generos.map((g) => g.nome).join(', ')}</p>
+              {jogo.review && <p className="game-review">{jogo.review}</p>}
               <div className="game-platforms">
                 {jogo.plataformas.map((p) => (
                   <span key={p.id} className="btn-tag">{p.nome}</span>
@@ -167,6 +206,10 @@ const Catalog: React.FC = () => {
             <label>Descrição</label>
             <textarea value={descricao} onChange={e => setDescricao(e.target.value)} rows={3} />
           </div>
+          <div className="form-group">
+            <label>Review pessoal</label>
+            <textarea value={review} onChange={e => setReview(e.target.value)} rows={3} />
+          </div>
           <div className="form-row" style={{ display: 'flex', gap: '1rem' }}>
             <div className="form-group" style={{ flex: 1 }}>
               <label>Nota (0-10)</label>
@@ -177,6 +220,29 @@ const Catalog: React.FC = () => {
               <input type="date" value={dataLancamento} onChange={e => setDataLancamento(e.target.value)} required />
             </div>
           </div>
+          <div className="form-row" style={{ display: 'flex', gap: '1rem' }}>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>Status</label>
+              <select value={status} onChange={e => setStatus(e.target.value as GameStatus)}>
+                <option value="WISHLIST">Wishlist</option>
+                <option value="JOGANDO">Jogando</option>
+                <option value="ZERADO">Zerado</option>
+                <option value="ABANDONADO">Abandonado</option>
+              </select>
+            </div>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>Horas jogadas</label>
+              <input type="number" min="0" value={horasJogadas} onChange={e => setHorasJogadas(Number(e.target.value))} />
+            </div>
+          </div>
+          <label className="favorite-toggle">
+            <input
+              type="checkbox"
+              checked={favorito}
+              onChange={e => setFavorito(e.target.checked)}
+            />
+            Marcar como favorito
+          </label>
           
           <div className="form-group">
             <label>Gêneros</label>

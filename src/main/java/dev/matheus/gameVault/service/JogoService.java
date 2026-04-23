@@ -47,6 +47,10 @@ public class JogoService {
             jogo.setDescricao(jogoAtualizado.getDescricao());
             jogo.setDataLancamento(jogoAtualizado.getDataLancamento());
             jogo.setNota(jogoAtualizado.getNota());
+            jogo.setStatus(jogoAtualizado.getStatus());
+            jogo.setFavorito(jogoAtualizado.getFavorito());
+            jogo.setReview(jogoAtualizado.getReview());
+            jogo.setHorasJogadas(jogoAtualizado.getHorasJogadas());
 
             jogo.getGeneros().clear();
             jogo.getGeneros().addAll(this.validarGeneros(jogoAtualizado.getGeneros()));

@@ -111,8 +111,69 @@
   box-shadow: 0 10px 20px rgba(15, 118, 110, 0.2);
 }
 
+.favorite-badge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--accent);
+  border: 1px solid rgba(217, 70, 107, 0.18);
+  border-radius: 999px;
+  box-shadow: 0 10px 20px rgba(217, 70, 107, 0.14);
+}
+
 .game-info {
   padding: 1.5rem;
+}
+
+.game-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.875rem;
+}
+
+.status-chip,
+.hours-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.35rem 0.65rem;
+}
+
+.status-wishlist {
+  background: #eef4ff;
+  color: #315b9d;
+}
+
+.status-jogando {
+  background: var(--surface-tint);
+  color: var(--primary);
+}
+
+.status-zerado {
+  background: #fff5df;
+  color: #9a6700;
+}
+
+.status-abandonado {
+  background: #f4f0ed;
+  color: #775f55;
+}
+
+.hours-chip {
+  background: var(--surface-alt);
+  color: var(--text-muted);
 }
 
 .game-info h3 {
@@ -127,6 +188,11 @@
   font-size: 0.9rem;
   margin-bottom: 1.25rem;
   font-weight: 500;
+}
+
+.game-review {
+  border-left: 3px solid var(--secondary);
+  padding-left: 0.75rem;
 }
 
 .game-platforms {
@@ -188,6 +254,19 @@
 }
 
 .checkbox-item input {
+  width: auto;
+}
+
+.favorite-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  color: var(--text);
+  font-weight: 700;
+  margin: 0 0 1.5rem;
+}
+
+.favorite-toggle input {
   width: auto;
 }
 

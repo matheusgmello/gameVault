@@ -5,6 +5,7 @@ import dev.matheus.gameVault.config.TokenService;
 import dev.matheus.gameVault.controller.request.JogoRequest;
 import dev.matheus.gameVault.entity.Genero;
 import dev.matheus.gameVault.entity.Jogo;
+import dev.matheus.gameVault.entity.JogoStatus;
 import dev.matheus.gameVault.entity.Plataforma;
 import dev.matheus.gameVault.entity.Usuario;
 import dev.matheus.gameVault.repository.GeneroRepository;
@@ -100,6 +101,10 @@ class JogoControllerTest {
                 "Incrível RPG",
                 LocalDate.now(),
                 9.8,
+                JogoStatus.JOGANDO,
+                true,
+                "Combate excelente e mundo muito rico.",
+                42,
                 java.util.List.of(genero.getId()),
                 java.util.List.of(plataforma.getId())
         );
@@ -110,7 +115,10 @@ class JogoControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.titulo").value("Final Fantasy VII Rebirth"))
-                .andExpect(jsonPath("$.nota").value(9.8));
+                .andExpect(jsonPath("$.nota").value(9.8))
+                .andExpect(jsonPath("$.status").value("JOGANDO"))
+                .andExpect(jsonPath("$.favorito").value(true))
+                .andExpect(jsonPath("$.horasJogadas").value(42));
     }
 
     @Test
@@ -129,6 +137,9 @@ class JogoControllerTest {
                 .descricao("Nao deve aparecer para outro usuario")
                 .dataLancamento(LocalDate.now())
                 .nota(8.5)
+                .status(JogoStatus.WISHLIST)
+                .favorito(false)
+                .horasJogadas(0)
                 .usuario(outroUsuario)
                 .generos(Set.of(genero))
                 .plataformas(Set.of(plataforma))

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
-import { Layout, LogOut, Gamepad2, Layers, Monitor, Star } from 'lucide-react';
+import { Clock, Heart, Layout, LogOut, Gamepad2, Layers, Monitor, Star } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import '../styles/Dashboard.css';
 
@@ -19,6 +19,8 @@ interface JogoResponse {
   id: number;
   titulo: string;
   nota: number;
+  favorito: boolean;
+  horasJogadas: number;
   plataformas: PlataformaResponse[];
 }
 
@@ -35,6 +37,8 @@ const Dashboard: React.FC = () => {
     totalGeneros: 0,
     totalPlataformas: 0,
     avgNota: 0,
+    totalFavoritos: 0,
+    totalHoras: 0,
   });
   const [chartData, setChartData] = useState<ChartItem[]>([]);
 
@@ -57,8 +61,10 @@ const Dashboard: React.FC = () => {
         const avgNota = totalJogos > 0 
           ? jogosData.reduce((acc, j) => acc + j.nota, 0) / totalJogos
           : 0;
+        const totalFavoritos = jogosData.filter((j) => j.favorito).length;
+        const totalHoras = jogosData.reduce((acc, j) => acc + (j.horasJogadas || 0), 0);
 
-        setStats({ totalJogos, totalGeneros, totalPlataformas, avgNota });
+        setStats({ totalJogos, totalGeneros, totalPlataformas, avgNota, totalFavoritos, totalHoras });
 
         // Agrupar por plataforma para o gráfico
         const platMap: Record<string, number> = {};
@@ -157,6 +163,20 @@ const Dashboard: React.FC = () => {
                 <div>
                   <h3>{stats.avgNota.toFixed(1)}</h3>
                   <p>Média de Notas</p>
+                </div>
+              </div>
+              <div className="stat-card">
+                <Heart className="icon" />
+                <div>
+                  <h3>{stats.totalFavoritos}</h3>
+                  <p>Favoritos</p>
+                </div>
+              </div>
+              <div className="stat-card">
+                <Clock className="icon" />
+                <div>
+                  <h3>{stats.totalHoras}h</h3>
+                  <p>Horas Jogadas</p>
                 </div>
               </div>
             </div>

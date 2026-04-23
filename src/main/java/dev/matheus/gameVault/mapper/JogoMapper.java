@@ -6,6 +6,7 @@ import dev.matheus.gameVault.controller.response.JogoResponse;
 import dev.matheus.gameVault.controller.response.PlataformaResponse;
 import dev.matheus.gameVault.entity.Genero;
 import dev.matheus.gameVault.entity.Jogo;
+import dev.matheus.gameVault.entity.JogoStatus;
 import dev.matheus.gameVault.entity.Plataforma;
 import lombok.experimental.UtilityClass;
 
@@ -32,6 +33,10 @@ public class JogoMapper {
                 .descricao(request.descricao())
                 .dataLancamento(request.dataLancamento())
                 .nota(request.nota())
+                .status(request.status() == null ? JogoStatus.WISHLIST : request.status())
+                .favorito(Boolean.TRUE.equals(request.favorito()))
+                .review(request.review())
+                .horasJogadas(request.horasJogadas() == null ? 0 : request.horasJogadas())
                 .generos(generos)
                 .plataformas(plataformas)
                 .build();
@@ -53,6 +58,10 @@ public class JogoMapper {
                 .descricao(jogo.getDescricao())
                 .dataLancamento(jogo.getDataLancamento())
                 .nota(jogo.getNota())
+                .status(jogo.getStatus())
+                .favorito(jogo.getFavorito())
+                .review(jogo.getReview())
+                .horasJogadas(jogo.getHorasJogadas())
                 .generos(generos)
                 .plataformas(plataformas)
                 .build();
