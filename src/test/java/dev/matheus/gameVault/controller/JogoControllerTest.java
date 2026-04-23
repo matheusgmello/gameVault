@@ -241,6 +241,49 @@ class JogoControllerTest {
     }
 
     @Test
+    @DisplayName("Deve retornar estatisticas apenas do usuario autenticado")
+    void deveRetornarEstatisticasApenasDoUsuarioAutenticado() throws Exception {
+        Jogo jogo = Jogo.builder()
+                .titulo("Elden Ring")
+                .descricao("RPG de mundo aberto")
+                .dataLancamento(LocalDate.of(2022, 2, 25))
+                .nota(10.0)
+                .status(JogoStatus.ZERADO)
+                .favorito(true)
+                .horasJogadas(126)
+                .usuario(usuario)
+                .generos(Set.of(genero))
+                .plataformas(Set.of(plataforma))
+                .build();
+        jogoRepository.save(jogo);
+
+        Jogo jogoOutroUsuario = Jogo.builder()
+                .titulo("Jogo Privado")
+                .descricao("Nao deve contar para outro usuario")
+                .dataLancamento(LocalDate.now())
+                .nota(5.0)
+                .status(JogoStatus.JOGANDO)
+                .favorito(false)
+                .horasJogadas(20)
+                .usuario(outroUsuario)
+                .generos(Set.of(genero))
+                .plataformas(Set.of(plataforma))
+                .build();
+        jogoRepository.save(jogoOutroUsuario);
+
+        mockMvc.perform(get("/gamevault/jogo/estatisticas")
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalJogos").value(1))
+                .andExpect(jsonPath("$.totalFavoritos").value(1))
+                .andExpect(jsonPath("$.totalHoras").value(126))
+                .andExpect(jsonPath("$.mediaNota").value(10.0))
+                .andExpect(jsonPath("$.jogosPorPlataforma[0].name").value("PS5"))
+                .andExpect(jsonPath("$.jogosPorStatus[0].name").value("ZERADO"))
+                .andExpect(jsonPath("$.topJogos[0].name").value("Elden Ring"));
+    }
+
+    @Test
     @DisplayName("Deve retornar 403 ao tentar acessar sem token")
     void deveRetornar403SemToken() throws Exception {
         mockMvc.perform(get("/gamevault/jogo"))

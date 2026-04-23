@@ -2,6 +2,7 @@ package dev.matheus.gameVault.controller;
 
 import dev.matheus.gameVault.config.JWTUserData;
 import dev.matheus.gameVault.controller.request.JogoRequest;
+import dev.matheus.gameVault.controller.response.JogoEstatisticasResponse;
 import dev.matheus.gameVault.controller.response.JogoResponse;
 import dev.matheus.gameVault.entity.Jogo;
 import dev.matheus.gameVault.entity.JogoStatus;
@@ -54,6 +55,12 @@ public class JogoController {
                         ordenarPor
                 ).stream()
                 .map(JogoMapper::toJogoResponse).toList());
+    }
+
+    @Operation(summary = "Buscar estatisticas dos Jogos", security = @SecurityRequirement(name = "bearerAuth"))
+    @GetMapping("/estatisticas")
+    public ResponseEntity<JogoEstatisticasResponse> buscarEstatisticas(@AuthenticationPrincipal JWTUserData usuario) {
+        return ResponseEntity.ok(jogoService.buscarEstatisticas(usuario.id()));
     }
 
     @Operation(summary = "Buscar Jogo por ID", security = @SecurityRequirement(name = "bearerAuth"))

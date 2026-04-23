@@ -1,5 +1,7 @@
 package dev.matheus.gameVault.service;
 
+import dev.matheus.gameVault.controller.response.EstatisticaItemResponse;
+import dev.matheus.gameVault.controller.response.JogoEstatisticasResponse;
 import dev.matheus.gameVault.entity.Genero;
 import dev.matheus.gameVault.entity.Jogo;
 import dev.matheus.gameVault.entity.JogoStatus;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -75,6 +78,36 @@ public class JogoService {
         return jogoRepository.findByGenerosContainingAndUsuarioId(genero, usuarioId);
     }
 
+    public JogoEstatisticasResponse buscarEstatisticas(Long usuarioId) {
+        List<Jogo> jogos = jogoRepository.findByUsuarioId(usuarioId);
+        int totalJogos = jogos.size();
+        int totalHoras = jogos.stream()
+                .map(Jogo::getHorasJogadas)
+                .mapToInt(horas -> horas == null ? 0 : horas)
+                .sum();
+        int totalFavoritos = (int) jogos.stream()
+                .filter(jogo -> Boolean.TRUE.equals(jogo.getFavorito()))
+                .count();
+        double mediaNota = jogos.stream()
+                .map(Jogo::getNota)
+                .filter(nota -> nota != null)
+                .mapToDouble(Double::doubleValue)
+                .average()
+                .orElse(0);
+
+        return JogoEstatisticasResponse.builder()
+                .totalJogos(totalJogos)
+                .totalGeneros(generoService.buscarTodos().size())
+                .totalPlataformas(plataformaService.buscarTodos().size())
+                .mediaNota(mediaNota)
+                .totalFavoritos(totalFavoritos)
+                .totalHoras(totalHoras)
+                .jogosPorPlataforma(agruparPorPlataforma(jogos))
+                .jogosPorStatus(agruparPorStatus(jogos))
+                .topJogos(topJogos(jogos))
+                .build();
+    }
+
     public Optional<Jogo> atualizar(Long id, Long usuarioId, Jogo jogoAtualizado) {
         return jogoRepository.findByIdAndUsuarioId(id, usuarioId).map(jogo -> {
             jogo.setTitulo(jogoAtualizado.getTitulo());
@@ -121,6 +154,36 @@ public class JogoService {
                     Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)
             );
         };
+    }
+
+    private List<EstatisticaItemResponse> agruparPorPlataforma(List<Jogo> jogos) {
+        Map<String, Long> contagem = jogos.stream()
+                .flatMap(jogo -> jogo.getPlataformas().stream())
+                .collect(Collectors.groupingBy(Plataforma::getNome, Collectors.counting()));
+
+        return contagem.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .map(item -> new EstatisticaItemResponse(item.getKey(), item.getValue()))
+                .toList();
+    }
+
+    private List<EstatisticaItemResponse> agruparPorStatus(List<Jogo> jogos) {
+        Map<JogoStatus, Long> contagem = jogos.stream()
+                .collect(Collectors.groupingBy(Jogo::getStatus, Collectors.counting()));
+
+        return contagem.entrySet().stream()
+                .sorted(Map.Entry.<JogoStatus, Long>comparingByValue().reversed())
+                .map(item -> new EstatisticaItemResponse(item.getKey().name(), item.getValue()))
+                .toList();
+    }
+
+    private List<EstatisticaItemResponse> topJogos(List<Jogo> jogos) {
+        return jogos.stream()
+                .filter(jogo -> jogo.getNota() != null)
+                .sorted(Comparator.comparing(Jogo::getNota, Comparator.reverseOrder()))
+                .limit(5)
+                .map(jogo -> new EstatisticaItemResponse(jogo.getTitulo(), jogo.getNota()))
+                .toList();
     }
 
     private Set<Genero> validarGeneros(Set<Genero> generos) {
