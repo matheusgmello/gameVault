@@ -4,6 +4,7 @@ import dev.matheus.gameVault.config.JWTUserData;
 import dev.matheus.gameVault.controller.request.JogoRequest;
 import dev.matheus.gameVault.controller.response.JogoResponse;
 import dev.matheus.gameVault.entity.Jogo;
+import dev.matheus.gameVault.entity.JogoStatus;
 import dev.matheus.gameVault.mapper.JogoMapper;
 import dev.matheus.gameVault.service.JogoService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,9 +37,32 @@ public class JogoController {
 
     @Operation(summary = "Listar todos os Jogos", security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping
-    public ResponseEntity<List<JogoResponse>> buscarTodos(@AuthenticationPrincipal JWTUserData usuario) {
-        return ResponseEntity.ok(jogoService.buscarTodos(usuario.id()).stream()
+    public ResponseEntity<List<JogoResponse>> buscarTodos(@AuthenticationPrincipal JWTUserData usuario,
+                                                          @RequestParam(required = false) String busca,
+                                                          @RequestParam(required = false) JogoStatus status,
+                                                          @RequestParam(required = false) Long generoId,
+                                                          @RequestParam(required = false) Long plataformaId,
+                                                          @RequestParam(required = false) Boolean favorito,
+                                                          @RequestParam(required = false) String ordenarPor) {
+        return ResponseEntity.ok(jogoService.buscarComFiltros(
+                        usuario.id(),
+                        busca,
+                        status,
+                        generoId,
+                        plataformaId,
+                        favorito,
+                        ordenarPor
+                ).stream()
                 .map(JogoMapper::toJogoResponse).toList());
+    }
+
+    @Operation(summary = "Buscar Jogo por ID", security = @SecurityRequirement(name = "bearerAuth"))
+    @GetMapping("/{id}")
+    public ResponseEntity<JogoResponse> buscarPorId(@AuthenticationPrincipal JWTUserData usuario,
+                                                    @PathVariable Long id) {
+        return jogoService.buscarPorId(id, usuario.id())
+                .map(jogo -> ResponseEntity.ok(JogoMapper.toJogoResponse(jogo)))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @Operation(summary = "Atualizar Jogo", security = @SecurityRequirement(name = "bearerAuth"))
