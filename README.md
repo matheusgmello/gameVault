@@ -1,143 +1,262 @@
-![Preview do Projeto](img/preview.png)
+![Preview do Projeto](img/preview.gif)
 
 # GameVault
 
-API REST para cadastro de catálogo de Genero e Plataformas de Jogos, desenvolvida com Java e Spring Boot, agora com interface visual moderna em React.
+GameVault e uma biblioteca pessoal de jogos com autenticacao JWT, dashboard com estatisticas e catalogo visual para organizar a colecao de cada usuario.
 
+O projeto combina um backend em Spring Boot com PostgreSQL e um frontend em React + TypeScript, com foco em portfolio, boa apresentacao visual e evolucao incremental de produto.
 
-## Sumário
+## Visao geral
 
-- [Sobre o projeto](#sobre-o-projeto)
-- [Tecnologias](#tecnologias)
-- [Arquitetura](#arquitetura)
-- [Funcionalidades](#funcionalidades)
-- [Interface Visual](#interface-visual)
-- [Testes](#testes)
-- [Configuração](#configuração)
-- [Passo a Passo](#passo-a-passo)
-- [Documentação da API](#documentação-da-api)
-- [Endpoints](#endpoints)
+Com o GameVault, cada usuario pode:
 
-## Sobre o projeto
+- criar conta e fazer login
+- cadastrar jogos na propria biblioteca
+- relacionar jogos com generos e plataformas
+- marcar status como `wishlist`, `jogando`, `zerado` e `abandonado`
+- salvar nota, review, horas jogadas, favorito e capa
+- filtrar e ordenar o catalogo
+- abrir a tela de detalhes de cada jogo
+- visualizar estatisticas pessoais no dashboard
 
-Plataforma que permite aos usuários descobrir jogos disponíveis em diferentes plataformas. O projeto foi desenvolvido com foco em:
-
-- Organização de conteúdo: categorização eficiente de Jogos
-- Múltiplos serviços: integração com diversas plataformas de jogos
-- Segurança: autenticação JWT para proteção dos endpoints
-- Experiência do Usuário: interface intuitiva com dashboard de estatísticas
-
-## Tecnologias
+## Stack
 
 ### Backend
-![Java](https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white)
-![Spring](https://img.shields.io/badge/spring-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
-![Flyway](https://img.shields.io/badge/Flyway-%23007ACC.svg?style=for-the-badge&logo=flyway&logoColor=white)
-![Swagger](https://img.shields.io/badge/-Swagger-%23Clojure?style=for-the-badge&logo=swagger&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=fff)
-[![Spring Security](https://img.shields.io/badge/Spring%20Security-6DB33F?logo=springsecurity&logoColor=fff)](#)
-![JUnit5](https://img.shields.io/badge/JUnit5-25A162?logo=junit5&logoColor=fff)
+
+- Java 17
+- Spring Boot 4
+- Spring Security
+- Spring Data JPA
+- Flyway
+- PostgreSQL
+- Swagger / SpringDoc
+- JUnit 5
+- H2 para testes
 
 ### Frontend
-![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
-![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
-![Recharts](https://img.shields.io/badge/Recharts-22b5bf?style=for-the-badge)
+
+- React 19
+- TypeScript
+- Vite
+- Axios
+- React Router
+- Recharts
+- Lucide React
+
+### DevOps
+
+- Docker Compose para o banco local
+- GitHub Actions para CI de frontend e backend
+
+## Funcionalidades implementadas
+
+### Autenticacao
+
+- registro de usuario
+- login com JWT
+- persistencia de sessao no frontend
+- protecao de rotas e endpoints autenticados
+
+### Biblioteca pessoal
+
+- jogos vinculados ao usuario autenticado
+- isolamento de dados entre usuarios
+- cadastro de genero e plataforma
+- cadastro de jogo com:
+  - titulo
+  - descricao
+  - data de lancamento
+  - nota
+  - status
+  - favorito
+  - review
+  - horas jogadas
+  - URL de capa
+
+### Catalogo
+
+- busca por titulo
+- filtros por status, genero, plataforma e favorito
+- ordenacao por titulo, nota, lancamento e horas jogadas
+- cards com capa e estado vazio
+- modal de detalhes do jogo
+
+### Dashboard
+
+- total de jogos
+- total de generos
+- total de plataformas
+- media de notas
+- total de favoritos
+- total de horas jogadas
+- jogos por plataforma
+- jogos por status
+- top jogos por nota
 
 ## Arquitetura
 
-O projeto segue arquitetura em camadas:
+```mermaid
+flowchart LR
+    A["React + Vite Frontend"] -->|"HTTP / JWT"| B["Spring Boot API"]
+    B --> C["Service Layer"]
+    C --> D["JPA Repositories"]
+    D --> E["PostgreSQL"]
+    B --> F["Flyway Migrations"]
+    B --> G["Swagger UI"]
+```
 
-`src/main/java/com/gameVault/`
-- `config/` — Configurações do Spring e Security
-- `controller/` — Controllers REST
-- `entity/` — Entidades JPA
-- `repository/` — Repositórios Spring Data
-- `service/` — Regras de negócio
-- `exception/` — Exceções customizadas
-- `mapper/` — Conversão entre DTOs e entidades
+### Estrutura do backend
 
-## Funcionalidades
+```text
+src/main/java/dev/matheus/gameVault/
+  config/        seguranca, JWT e configuracoes da aplicacao
+  controller/    endpoints REST
+  entity/        entidades JPA
+  mapper/        conversao entre DTOs e entidades
+  repository/    acesso a dados
+  service/       regras de negocio
+  exception/     excecoes customizadas
+```
 
-Autenticação e autorização
-- Login e registro de usuários via interface e API
-- Autenticação JWT com expiração de 24h
-- Proteção de rotas e persistência de sessão
+### Estrutura do frontend
 
-Gerenciamento de generos
-- CRUD completo de generos de jogos
-- Interface dedicada para gestão rápida
+```text
+frontend/src/
+  components/    componentes reutilizaveis
+  contexts/      autenticacao e estado global
+  pages/         login, registro, dashboard e catalogo
+  services/      cliente HTTP
+  styles/        estilos globais e por pagina
+```
 
-Serviços de plataformas
-- Cadastro e gestão de provedores (PC, PS5, Xbox, etc)
-- Associação dinâmica com jogos
-
-Catálogo de Jogos
-- Cadastro detalhado com notas e datas
-- Busca em tempo real por título
-- Dashboard com gráficos de distribuição por plataforma
-
-## Interface Visual
-
-O frontend foi desenvolvido em React com TypeScript, oferecendo:
-- **Dashboard:** Visão analítica da coleção com gráficos interativos.
-- **Catálogo:** Grid moderno de cards com busca integrada.
-- **Gerenciamento:** Modais intuitivos para cadastros de Jogos, Gêneros e Plataformas.
-- **Design:** Tema dark "Gamer Premium" com efeitos de Glassmorphism.
-
-## Testes
-
-O projeto conta com uma suíte de testes automatizados garantindo a confiabilidade:
-- **Testes Unitários:** Foco na camada de serviço utilizando JUnit 5 e Mockito.
-- **Testes de Integração:** Validação de fluxos completos (Controller -> Service -> Repository) utilizando banco de dados H2 em memória.
-- **Cenários Cobertos:** Autenticação, criptografia de senhas, regras de negócio de jogos e persistência.
-
-## Configuração
+## Como rodar localmente
 
 ### Requisitos
-- Java 17 ou superior
-- Node.js 18 ou superior
-- Docker e Docker-compose
 
-### Passo a passo
+- Java 17+
+- Node.js 20+ ou 22+
+- Docker Desktop / Docker Compose
 
-1. Clone o repositório:
+### 1. Subir o banco
+
 ```bash
-git clone [url-do-repositorio]
+docker compose up -d
 ```
 
-2. Subir o Banco de Dados (Docker):
-```bash
-docker-compose up -d
-```
+O PostgreSQL sobe em `localhost:5433` com:
 
-3. Iniciar o Backend:
+- database: `gamevault`
+- user: `postgres`
+- password: `postgres`
+
+### 2. Rodar o backend
+
+Linux/macOS:
+
 ```bash
 ./mvnw spring-boot:run
 ```
 
-4. Iniciar o Frontend:
+Windows:
+
+```bash
+mvnw.cmd spring-boot:run
+```
+
+Backend disponivel em: [http://localhost:8080](http://localhost:8080)
+
+### 3. Rodar o frontend
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-A API ficará disponível em `http://localhost:8080` e o Frontend em `http://localhost:5173`.
+Frontend disponivel em: [http://localhost:5173](http://localhost:5173)
 
-## Documentação da API
+## Conta para demonstracao local
 
-Para testar a API, acesse o Swagger em:
+Para visualizar a interface com dados preenchidos, voce pode usar:
+
+- email: `matheus@email.com`
+- senha: `12345`
+
+## Endpoints principais
+
+### Autenticacao
+
+- `POST /gamevault/auth/registrar`
+- `POST /gamevault/auth/login`
+
+### Jogos
+
+- `GET /gamevault/jogo`
+- `GET /gamevault/jogo/{id}`
+- `GET /gamevault/jogo/estatisticas`
+- `POST /gamevault/jogo`
+- `PUT /gamevault/jogo/{id}`
+- `DELETE /gamevault/jogo/{id}`
+
+### Catalogos auxiliares
+
+- `GET /gamevault/genero`
+- `POST /gamevault/genero`
+- `DELETE /gamevault/genero/{id}`
+- `GET /gamevault/plataforma`
+- `POST /gamevault/plataforma`
+- `DELETE /gamevault/plataforma/{id}`
+
+## Documentacao da API
+
+Com a aplicacao rodando, o Swagger fica disponivel em:
+
+- [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+
+## Testes e qualidade
+
+### Backend
+
+```bash
+./mvnw test
 ```
-http://localhost:8080/swagger-ui.html
+
+ou no Windows:
+
+```bash
+mvnw.cmd test
 ```
 
-### Endpoints Principais
+### Frontend
 
-- `POST /gamevault/auth/registrar` — Criar nova conta
-- `POST /gamevault/auth/login` — Autenticar usuário
-- `GET /gamevault/jogo` — Listar catálogo completo
-- `POST /gamevault/jogo` — Cadastrar novo jogo
-- `GET /gamevault/genero` — Listar gêneros disponíveis
-- `GET /gamevault/plataforma` — Listar plataformas disponíveis
+```bash
+cd frontend
+npm run lint
+npm run build
+```
+
+## CI com GitHub Actions
+
+O projeto possui pipelines separados:
+
+- `.github/workflows/backend-ci.yml`
+- `.github/workflows/frontend-ci.yml`
+
+Eles executam:
+
+- backend: testes Maven
+- frontend: `npm ci`, lint e build
+
+## Configuracao atual
+
+Arquivo principal de configuracao do backend:
+
+- [application.yaml](src/main/resources/application.yaml)
+
+Hoje o projeto usa:
+
+- PostgreSQL local em `localhost:5433`
+- Flyway habilitado
+- secret JWT configurado localmente no arquivo de aplicacao
+
+Para ambiente de producao, o proximo passo recomendado e mover esse secret para variavel de ambiente.
