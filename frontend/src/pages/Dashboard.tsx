@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
-import { Layout, LogOut, Gamepad2, Layers, Monitor, Star } from 'lucide-react';
+import { Clock, Heart, Layout, LogOut, Gamepad2, Layers, Monitor, Star, Trophy } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import '../styles/Dashboard.css';
 
@@ -10,22 +10,29 @@ import SimpleManager from './SimpleManager';
 
 const COLORS = ['#0f766e', '#ff7a59', '#d9466b', '#2f6f95', '#c59b2c'];
 
-interface PlataformaResponse {
-  id: number;
-  nome: string;
-}
-
-interface JogoResponse {
-  id: number;
-  titulo: string;
-  nota: number;
-  plataformas: PlataformaResponse[];
-}
-
 interface ChartItem {
   name: string;
   value: number;
 }
+
+interface GameStatsResponse {
+  totalJogos: number;
+  totalGeneros: number;
+  totalPlataformas: number;
+  mediaNota: number;
+  totalFavoritos: number;
+  totalHoras: number;
+  jogosPorPlataforma: ChartItem[];
+  jogosPorStatus: ChartItem[];
+  topJogos: ChartItem[];
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  WISHLIST: 'Wishlist',
+  JOGANDO: 'Jogando',
+  ZERADO: 'Zerado',
+  ABANDONADO: 'Abandonado',
+};
 
 const Dashboard: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -34,52 +41,46 @@ const Dashboard: React.FC = () => {
     totalJogos: 0,
     totalGeneros: 0,
     totalPlataformas: 0,
-    avgNota: 0,
+    mediaNota: 0,
+    totalFavoritos: 0,
+    totalHoras: 0,
   });
-  const [chartData, setChartData] = useState<ChartItem[]>([]);
+  const [platformChartData, setPlatformChartData] = useState<ChartItem[]>([]);
+  const [statusChartData, setStatusChartData] = useState<ChartItem[]>([]);
+  const [topGamesData, setTopGamesData] = useState<ChartItem[]>([]);
 
   useEffect(() => {
-    async function loadStats() {
-      try {
-        const [jogos, generos, plataformas] = await Promise.all([
-          api.get('/gamevault/jogo'),
-          api.get('/gamevault/genero'),
-          api.get('/gamevault/plataforma'),
-        ]);
+    let mounted = true;
 
-        const jogosData = jogos.data as JogoResponse[];
-        const generosData = generos.data as unknown[];
-        const plataformasData = plataformas.data as unknown[];
+    api.get<GameStatsResponse>('/gamevault/jogo/estatisticas')
+      .then((response) => {
+        if (!mounted) {
+          return;
+        }
 
-        const totalJogos = jogosData.length;
-        const totalGeneros = generosData.length;
-        const totalPlataformas = plataformasData.length;
-        const avgNota = totalJogos > 0 
-          ? jogosData.reduce((acc, j) => acc + j.nota, 0) / totalJogos
-          : 0;
-
-        setStats({ totalJogos, totalGeneros, totalPlataformas, avgNota });
-
-        // Agrupar por plataforma para o gráfico
-        const platMap: Record<string, number> = {};
-        jogosData.forEach((j) => {
-          j.plataformas.forEach((p) => {
-            platMap[p.nome] = (platMap[p.nome] || 0) + 1;
-          });
+        const data = response.data;
+        setStats({
+          totalJogos: data.totalJogos,
+          totalGeneros: data.totalGeneros,
+          totalPlataformas: data.totalPlataformas,
+          mediaNota: data.mediaNota,
+          totalFavoritos: data.totalFavoritos,
+          totalHoras: data.totalHoras,
         });
+        setPlatformChartData(data.jogosPorPlataforma);
+        setStatusChartData(data.jogosPorStatus.map((item) => ({
+          ...item,
+          name: STATUS_LABELS[item.name] ?? item.name,
+        })));
+        setTopGamesData(data.topJogos);
+      })
+      .catch((error) => {
+        console.error('Erro ao carregar estatisticas', error);
+      });
 
-        const platData = Object.keys(platMap).map(name => ({
-          name,
-          value: platMap[name],
-        }));
-
-        setChartData(platData);
-      } catch (error) {
-        console.error('Erro ao carregar estatísticas', error);
-      }
-    }
-
-    loadStats();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
@@ -90,26 +91,26 @@ const Dashboard: React.FC = () => {
           <span>GameVault</span>
         </div>
         <nav className="sidebar-nav">
-          <button 
-            className={activeTab === 'stats' ? 'active' : ''} 
+          <button
+            className={activeTab === 'stats' ? 'active' : ''}
             onClick={() => setActiveTab('stats')}
           >
             <Layout size={20} /> Dashboard
           </button>
-          <button 
-            className={activeTab === 'games' ? 'active' : ''} 
+          <button
+            className={activeTab === 'games' ? 'active' : ''}
             onClick={() => setActiveTab('games')}
           >
             <Gamepad2 size={20} /> Meus Jogos
           </button>
-          <button 
-            className={activeTab === 'genres' ? 'active' : ''} 
+          <button
+            className={activeTab === 'genres' ? 'active' : ''}
             onClick={() => setActiveTab('genres')}
           >
-            <Layers size={20} /> Gêneros
+            <Layers size={20} /> Generos
           </button>
-          <button 
-            className={activeTab === 'platforms' ? 'active' : ''} 
+          <button
+            className={activeTab === 'platforms' ? 'active' : ''}
             onClick={() => setActiveTab('platforms')}
           >
             <Monitor size={20} /> Plataformas
@@ -126,8 +127,8 @@ const Dashboard: React.FC = () => {
         {activeTab === 'stats' && (
           <>
             <header className="content-header">
-              <h1>Olá, {user?.nome}</h1>
-              <p>Aqui está o resumo da sua coleção.</p>
+              <h1>Ola, {user?.nome}</h1>
+              <p>Aqui esta o resumo da sua colecao.</p>
             </header>
 
             <div className="stats-grid">
@@ -142,7 +143,7 @@ const Dashboard: React.FC = () => {
                 <Layers className="icon" />
                 <div>
                   <h3>{stats.totalGeneros}</h3>
-                  <p>Gêneros</p>
+                  <p>Generos</p>
                 </div>
               </div>
               <div className="stat-card">
@@ -155,8 +156,22 @@ const Dashboard: React.FC = () => {
               <div className="stat-card">
                 <Star className="icon" />
                 <div>
-                  <h3>{stats.avgNota.toFixed(1)}</h3>
-                  <p>Média de Notas</p>
+                  <h3>{stats.mediaNota.toFixed(1)}</h3>
+                  <p>Media de Notas</p>
+                </div>
+              </div>
+              <div className="stat-card">
+                <Heart className="icon" />
+                <div>
+                  <h3>{stats.totalFavoritos}</h3>
+                  <p>Favoritos</p>
+                </div>
+              </div>
+              <div className="stat-card">
+                <Clock className="icon" />
+                <div>
+                  <h3>{stats.totalHoras}h</h3>
+                  <p>Horas Jogadas</p>
                 </div>
               </div>
             </div>
@@ -167,7 +182,7 @@ const Dashboard: React.FC = () => {
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
-                      data={chartData}
+                      data={platformChartData}
                       cx="50%"
                       cy="50%"
                       innerRadius={60}
@@ -175,7 +190,7 @@ const Dashboard: React.FC = () => {
                       paddingAngle={5}
                       dataKey="value"
                     >
-                      {chartData.map((_, index) => (
+                      {platformChartData.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -185,14 +200,30 @@ const Dashboard: React.FC = () => {
               </div>
 
               <div className="chart-container">
-                <h3>Distribuição</h3>
+                <h3>Jogos por Status</h3>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={chartData}>
+                  <BarChart data={statusChartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#dedbd0" />
                     <XAxis dataKey="name" stroke="#68736f" />
-                    <YAxis stroke="#68736f" />
+                    <YAxis stroke="#68736f" allowDecimals={false} />
                     <Tooltip />
                     <Bar dataKey="value" fill="#0f766e" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="chart-container chart-container-wide">
+                <div className="chart-title-row">
+                  <Trophy size={20} />
+                  <h3>Top jogos por nota</h3>
+                </div>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={topGamesData} layout="vertical" margin={{ left: 40 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#dedbd0" />
+                    <XAxis type="number" stroke="#68736f" domain={[0, 10]} />
+                    <YAxis type="category" dataKey="name" stroke="#68736f" width={130} />
+                    <Tooltip />
+                    <Bar dataKey="value" fill="#ff7a59" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -201,7 +232,7 @@ const Dashboard: React.FC = () => {
         )}
 
         {activeTab === 'games' && <Catalog />}
-        {activeTab === 'genres' && <SimpleManager type="genero" title="Gêneros" />}
+        {activeTab === 'genres' && <SimpleManager type="genero" title="Generos" />}
         {activeTab === 'platforms' && <SimpleManager type="plataforma" title="Plataformas" />}
       </main>
     </div>

@@ -5,10 +5,15 @@ import dev.matheus.gameVault.entity.Jogo;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface JogoRepository extends JpaRepository<Jogo, Long> {
 
-    // Busca todos os jogos que contenham o gênero passado por parâmetro
-    List<Jogo> findByGenerosContaining(Genero genero);
+    List<Jogo> findByUsuarioId(Long usuarioId);
+
+    Optional<Jogo> findByIdAndUsuarioId(Long id, Long usuarioId);
+
+    // Busca todos os jogos do usuario que contenham o gênero passado por parâmetro
+    List<Jogo> findByGenerosContainingAndUsuarioId(Genero genero, Long usuarioId);
 
 }

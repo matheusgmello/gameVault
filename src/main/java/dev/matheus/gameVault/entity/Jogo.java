@@ -27,7 +27,28 @@ public class Jogo {
     @Column(name = "data_lancamento")
     private LocalDate dataLancamento;
 
+    @Column(name = "capa_url", length = 1000)
+    private String capaUrl;
+
     private Double nota;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private JogoStatus status = JogoStatus.WISHLIST;
+
+    @Builder.Default
+    private Boolean favorito = false;
+
+    @Column(columnDefinition = "TEXT")
+    private String review;
+
+    @Column(name = "horas_jogadas")
+    @Builder.Default
+    private Integer horasJogadas = 0;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private Usuario usuario;
 
     @ManyToMany
     @JoinTable(
@@ -35,6 +56,7 @@ public class Jogo {
             joinColumns = @JoinColumn(name = "jogo_id"),
             inverseJoinColumns = @JoinColumn(name = "genero_id")
     )
+    @Builder.Default
     private Set<Genero> generos = new HashSet<>();
 
     @ManyToMany
@@ -43,6 +65,7 @@ public class Jogo {
             joinColumns = @JoinColumn(name = "jogo_id"),
             inverseJoinColumns = @JoinColumn(name = "plataforma_id")
     )
+    @Builder.Default
     private Set<Plataforma> plataformas = new HashSet<>();
 
 }
