@@ -7,6 +7,8 @@ import dev.matheus.gameVault.entity.Jogo;
 import dev.matheus.gameVault.entity.JogoStatus;
 import dev.matheus.gameVault.entity.Plataforma;
 import dev.matheus.gameVault.entity.Usuario;
+import dev.matheus.gameVault.exception.DuplicateResourceException;
+import dev.matheus.gameVault.exception.ResourceNotFoundException;
 import dev.matheus.gameVault.repository.JogoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,7 @@ public class JogoService {
     private final PlataformaService plataformaService;
 
     public Jogo salvar(Jogo jogo, Long usuarioId) {
+        validarTituloDuplicado(usuarioId, jogo.getTitulo());
         jogo.setUsuario(Usuario.builder().id(usuarioId).build());
         jogo.setGeneros(this.validarGeneros(jogo.getGeneros()));
         jogo.setPlataformas(this.validarPlataformas(jogo.getPlataformas()));
@@ -110,6 +113,7 @@ public class JogoService {
 
     public Optional<Jogo> atualizar(Long id, Long usuarioId, Jogo jogoAtualizado) {
         return jogoRepository.findByIdAndUsuarioId(id, usuarioId).map(jogo -> {
+            validarTituloDuplicado(usuarioId, jogoAtualizado.getTitulo(), id);
             jogo.setTitulo(jogoAtualizado.getTitulo());
             jogo.setDescricao(jogoAtualizado.getDescricao());
             jogo.setDataLancamento(jogoAtualizado.getDataLancamento());
@@ -188,17 +192,27 @@ public class JogoService {
 
     private Set<Genero> validarGeneros(Set<Genero> generos) {
         return generos.stream()
-                .map(g -> generoService.buscarPorId(g.getId()))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+                .map(g -> generoService.buscarPorId(g.getId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Genero informado nao foi encontrado.")))
                 .collect(Collectors.toSet());
     }
 
     private Set<Plataforma> validarPlataformas(Set<Plataforma> plataformas) {
         return plataformas.stream()
-                .map(p -> plataformaService.buscarPorId(p.getId()))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+                .map(p -> plataformaService.buscarPorId(p.getId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Plataforma informada nao foi encontrada.")))
                 .collect(Collectors.toSet());
+    }
+
+    private void validarTituloDuplicado(Long usuarioId, String titulo) {
+        if (jogoRepository.existsByUsuarioIdAndTituloIgnoreCase(usuarioId, titulo)) {
+            throw new DuplicateResourceException("Voce ja possui um jogo com esse titulo na sua biblioteca.");
+        }
+    }
+
+    private void validarTituloDuplicado(Long usuarioId, String titulo, Long jogoId) {
+        if (jogoRepository.existsByUsuarioIdAndTituloIgnoreCaseAndIdNot(usuarioId, titulo, jogoId)) {
+            throw new DuplicateResourceException("Voce ja possui um jogo com esse titulo na sua biblioteca.");
+        }
     }
 }

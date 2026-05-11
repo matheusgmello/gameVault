@@ -80,3 +80,7 @@
 .btn-save:hover {
   background: var(--primary-hover);
 }
+
+.confirm-dialog p {
+  color: var(--text-muted);
+}

@@ -1,7 +1,10 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import api from '../services/api';
-import { Calendar, Clock, Eye, Heart, Plus, Search, SlidersHorizontal, Star, Trash2, X } from 'lucide-react';
+import { getApiErrorMessage } from '../services/apiError';
+import { useToast } from '../contexts/ToastContext';
+import { Calendar, ChevronLeft, ChevronRight, Clock, Eye, Heart, Plus, Search, SlidersHorizontal, Star, Trash2, X } from 'lucide-react';
 import Modal from '../components/Modal';
+import ConfirmDialog from '../components/ConfirmDialog';
 import '../styles/Catalog.css';
 
 type GameStatus = 'WISHLIST' | 'JOGANDO' | 'ZERADO' | 'ABANDONADO';
@@ -48,6 +51,8 @@ interface GameFilters {
   ordenarPor?: SortOption;
 }
 
+const ITEMS_PER_PAGE = 6;
+
 const Catalog: React.FC = () => {
   const [jogos, setJogos] = useState<JogoResponse[]>([]);
   const [generos, setGeneros] = useState<GeneroResponse[]>([]);
@@ -61,6 +66,10 @@ const Catalog: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedGame, setSelectedGame] = useState<JogoResponse | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<JogoResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
@@ -73,34 +82,22 @@ const Catalog: React.FC = () => {
   const [horasJogadas, setHorasJogadas] = useState(0);
   const [selectedGeneros, setSelectedGeneros] = useState<number[]>([]);
   const [selectedPlataformas, setSelectedPlataformas] = useState<number[]>([]);
+  const { showToast } = useToast();
 
   const currentFilters = useCallback(() => {
     const filters: GameFilters = { ordenarPor: sortBy };
 
-    if (search.trim()) {
-      filters.busca = search.trim();
-    }
-
-    if (statusFilter) {
-      filters.status = statusFilter;
-    }
-
-    if (genreFilter) {
-      filters.generoId = Number(genreFilter);
-    }
-
-    if (platformFilter) {
-      filters.plataformaId = Number(platformFilter);
-    }
-
-    if (favoriteFilter === 'favorites') {
-      filters.favorito = true;
-    }
+    if (search.trim()) filters.busca = search.trim();
+    if (statusFilter) filters.status = statusFilter;
+    if (genreFilter) filters.generoId = Number(genreFilter);
+    if (platformFilter) filters.plataformaId = Number(platformFilter);
+    if (favoriteFilter === 'favorites') filters.favorito = true;
 
     return filters;
   }, [favoriteFilter, genreFilter, platformFilter, search, sortBy, statusFilter]);
 
   const loadData = useCallback(async () => {
+    setLoading(true);
     const [resJogos, resGeneros, resPlats] = await Promise.all([
       api.get('/gamevault/jogo', { params: currentFilters() }),
       api.get('/gamevault/genero'),
@@ -109,32 +106,55 @@ const Catalog: React.FC = () => {
     setJogos(resJogos.data);
     setGeneros(resGeneros.data);
     setPlataformas(resPlats.data);
+    setLoading(false);
   }, [currentFilters]);
 
   useEffect(() => {
     let mounted = true;
 
+    setLoading(true);
     Promise.all([
       api.get('/gamevault/jogo', { params: currentFilters() }),
       api.get('/gamevault/genero'),
       api.get('/gamevault/plataforma'),
-    ]).then(([resJogos, resGeneros, resPlats]) => {
-      if (!mounted) {
-        return;
-      }
-
-      setJogos(resJogos.data);
-      setGeneros(resGeneros.data);
-      setPlataformas(resPlats.data);
-    });
+    ])
+      .then(([resJogos, resGeneros, resPlats]) => {
+        if (!mounted) return;
+        setJogos(resJogos.data);
+        setGeneros(resGeneros.data);
+        setPlataformas(resPlats.data);
+        setCurrentPage(1);
+      })
+      .catch((error) => {
+        if (!mounted) return;
+        showToast({
+          title: 'Nao foi possivel carregar o catalogo.',
+          message: getApiErrorMessage(error, 'Atualize a pagina e tente novamente.'),
+          variant: 'error',
+        });
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
 
     return () => {
       mounted = false;
     };
-  }, [currentFilters]);
+  }, [currentFilters, showToast]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, genreFilter, platformFilter, favoriteFilter, sortBy]);
+
+  const totalPages = Math.max(1, Math.ceil(jogos.length / ITEMS_PER_PAGE));
+  const paginatedJogos = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return jogos.slice(start, start + ITEMS_PER_PAGE);
+  }, [currentPage, jogos]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setSubmitting(true);
     try {
       await api.post('/gamevault/jogo', {
         titulo,
@@ -151,25 +171,49 @@ const Catalog: React.FC = () => {
       });
       setIsModalOpen(false);
       resetForm();
+      showToast({ title: 'Jogo salvo com sucesso.', variant: 'success' });
       void loadData();
-    } catch {
-      alert('Erro ao salvar jogo');
+    } catch (error) {
+      showToast({
+        title: 'Nao foi possivel salvar o jogo.',
+        message: getApiErrorMessage(error, 'Revise os dados preenchidos e tente novamente.'),
+        variant: 'error',
+      });
+    } finally {
+      setSubmitting(false);
     }
   }
 
-  async function handleDelete(id: number) {
-    if (window.confirm('Deseja realmente excluir este jogo?')) {
-      await api.delete(`/gamevault/jogo/${id}`);
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    try {
+      await api.delete(`/gamevault/jogo/${pendingDelete.id}`);
       setIsDetailOpen(false);
       setSelectedGame(null);
+      setPendingDelete(null);
+      showToast({ title: 'Jogo excluido com sucesso.', variant: 'success' });
       void loadData();
+    } catch (error) {
+      showToast({
+        title: 'Nao foi possivel excluir o jogo.',
+        message: getApiErrorMessage(error, 'Tente novamente em instantes.'),
+        variant: 'error',
+      });
     }
   }
 
   async function handleOpenDetail(id: number) {
-    const response = await api.get(`/gamevault/jogo/${id}`);
-    setSelectedGame(response.data);
-    setIsDetailOpen(true);
+    try {
+      const response = await api.get(`/gamevault/jogo/${id}`);
+      setSelectedGame(response.data);
+      setIsDetailOpen(true);
+    } catch (error) {
+      showToast({
+        title: 'Nao foi possivel abrir o jogo.',
+        message: getApiErrorMessage(error, 'Tente novamente em instantes.'),
+        variant: 'error',
+      });
+    }
   }
 
   function resetForm() {
@@ -255,11 +299,37 @@ const Catalog: React.FC = () => {
         )}
       </section>
 
-      <div className="catalog-result-count">
-        {jogos.length} {jogos.length === 1 ? 'jogo encontrado' : 'jogos encontrados'}
+      <div className="catalog-toolbar">
+        <div className="catalog-result-count">
+          {jogos.length} {jogos.length === 1 ? 'jogo encontrado' : 'jogos encontrados'}
+        </div>
+        {jogos.length > ITEMS_PER_PAGE && (
+          <div className="pagination">
+            <button type="button" aria-label="Pagina anterior" className="btn-page" disabled={currentPage === 1} onClick={() => setCurrentPage((page) => page - 1)}>
+              <ChevronLeft size={16} />
+            </button>
+            <span className="pagination-label">Pagina {currentPage} de {totalPages}</span>
+            <button type="button" aria-label="Proxima pagina" className="btn-page" disabled={currentPage === totalPages} onClick={() => setCurrentPage((page) => page + 1)}>
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
       </div>
 
-      {jogos.length === 0 ? (
+      {loading ? (
+        <div className="games-grid">
+          {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
+            <div key={index} className="game-card game-card-skeleton">
+              <div className="game-cover skeleton-block" />
+              <div className="game-info">
+                <div className="skeleton-line short" />
+                <div className="skeleton-line medium" />
+                <div className="skeleton-line long" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : jogos.length === 0 ? (
         <div className="empty-catalog">
           <Search size={32} />
           <h3>Nenhum jogo encontrado</h3>
@@ -267,7 +337,7 @@ const Catalog: React.FC = () => {
         </div>
       ) : (
         <div className="games-grid">
-          {jogos.map((jogo) => (
+          {paginatedJogos.map((jogo) => (
             <article key={jogo.id} className="game-card" onClick={() => void handleOpenDetail(jogo.id)}>
               <div className="game-cover">
                 {jogo.capaUrl ? (
@@ -288,7 +358,7 @@ const Catalog: React.FC = () => {
                   aria-label={`Excluir ${jogo.titulo}`}
                   onClick={(e) => {
                     e.stopPropagation();
-                    void handleDelete(jogo.id);
+                    setPendingDelete(jogo);
                   }}
                 >
                   <Trash2 size={18} />
@@ -327,35 +397,35 @@ const Catalog: React.FC = () => {
       >
         <form onSubmit={handleSubmit} className="game-form">
           <div className="form-group">
-            <label>Titulo</label>
-            <input value={titulo} onChange={(e) => setTitulo(e.target.value)} required />
+            <label htmlFor="jogo-titulo">Titulo</label>
+            <input id="jogo-titulo" value={titulo} onChange={(e) => setTitulo(e.target.value)} required />
           </div>
           <div className="form-group">
-            <label>Descricao</label>
-            <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={3} />
+            <label htmlFor="jogo-descricao">Descricao</label>
+            <textarea id="jogo-descricao" value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={3} />
           </div>
           <div className="form-group">
-            <label>URL da capa</label>
-            <input value={capaUrl} onChange={(e) => setCapaUrl(e.target.value)} placeholder="https://..." />
+            <label htmlFor="jogo-capa">URL da capa</label>
+            <input id="jogo-capa" value={capaUrl} onChange={(e) => setCapaUrl(e.target.value)} placeholder="https://..." />
           </div>
           <div className="form-group">
-            <label>Review pessoal</label>
-            <textarea value={review} onChange={(e) => setReview(e.target.value)} rows={3} />
+            <label htmlFor="jogo-review">Review pessoal</label>
+            <textarea id="jogo-review" value={review} onChange={(e) => setReview(e.target.value)} rows={3} />
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label>Nota (0-10)</label>
-              <input type="number" step="0.1" min="0" max="10" value={nota} onChange={(e) => setNota(Number(e.target.value))} required />
+              <label htmlFor="jogo-nota">Nota (0-10)</label>
+              <input id="jogo-nota" type="number" step="0.1" min="0" max="10" value={nota} onChange={(e) => setNota(Number(e.target.value))} required />
             </div>
             <div className="form-group">
-              <label>Lancamento</label>
-              <input type="date" value={dataLancamento} onChange={(e) => setDataLancamento(e.target.value)} required />
+              <label htmlFor="jogo-lancamento">Lancamento</label>
+              <input id="jogo-lancamento" type="date" value={dataLancamento} onChange={(e) => setDataLancamento(e.target.value)} required />
             </div>
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label>Status</label>
-              <select value={status} onChange={(e) => setStatus(e.target.value as GameStatus)}>
+              <label htmlFor="jogo-status">Status</label>
+              <select id="jogo-status" value={status} onChange={(e) => setStatus(e.target.value as GameStatus)}>
                 <option value="WISHLIST">Wishlist</option>
                 <option value="JOGANDO">Jogando</option>
                 <option value="ZERADO">Zerado</option>
@@ -363,16 +433,12 @@ const Catalog: React.FC = () => {
               </select>
             </div>
             <div className="form-group">
-              <label>Horas jogadas</label>
-              <input type="number" min="0" value={horasJogadas} onChange={(e) => setHorasJogadas(Number(e.target.value))} />
+              <label htmlFor="jogo-horas">Horas jogadas</label>
+              <input id="jogo-horas" type="number" min="0" value={horasJogadas} onChange={(e) => setHorasJogadas(Number(e.target.value))} />
             </div>
           </div>
           <label className="favorite-toggle">
-            <input
-              type="checkbox"
-              checked={favorito}
-              onChange={(e) => setFavorito(e.target.checked)}
-            />
+            <input type="checkbox" checked={favorito} onChange={(e) => setFavorito(e.target.checked)} />
             Marcar como favorito
           </label>
 
@@ -416,7 +482,7 @@ const Catalog: React.FC = () => {
 
           <div className="form-actions">
             <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>
-            <button type="submit" className="btn-save">Salvar Jogo</button>
+            <button type="submit" className="btn-save" disabled={submitting}>{submitting ? 'Salvando...' : 'Salvar Jogo'}</button>
           </div>
         </form>
       </Modal>
@@ -489,13 +555,23 @@ const Catalog: React.FC = () => {
 
             <div className="form-actions">
               <button type="button" className="btn-cancel" onClick={() => setIsDetailOpen(false)}>Fechar</button>
-              <button type="button" className="btn-danger" onClick={() => void handleDelete(selectedGame.id)}>
+              <button type="button" className="btn-danger" onClick={() => setPendingDelete(selectedGame)}>
                 Excluir jogo
               </button>
             </div>
           </div>
         )}
       </Modal>
+
+      <ConfirmDialog
+        isOpen={!!pendingDelete}
+        title="Excluir jogo"
+        description={`Tem certeza que deseja excluir ${pendingDelete?.titulo ?? 'este jogo'} da sua biblioteca?`}
+        confirmLabel="Excluir jogo"
+        onConfirm={() => void confirmDelete()}
+        onCancel={() => setPendingDelete(null)}
+        danger
+      />
     </div>
   );
 };
