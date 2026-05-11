@@ -44,6 +44,23 @@ const Login: React.FC = () => {
           <p>Seu acervo de games em um so lugar</p>
         </div>
 
+        <div className="demo-access">
+          <div>
+            <strong>Acesso demo</strong>
+            <p>Preencha automaticamente a conta de demonstracao para testar a interface.</p>
+          </div>
+          <button
+            type="button"
+            className="demo-fill-button"
+            onClick={() => {
+              setEmail('matheus@email.com');
+              setSenha('12345');
+            }}
+          >
+            Usar conta demo
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="login-email">E-mail</label>
