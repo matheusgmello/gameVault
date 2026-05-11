@@ -289,4 +289,34 @@ class JogoControllerTest {
         mockMvc.perform(get("/gamevault/jogo"))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    @DisplayName("Deve retornar erros de validacao padronizados ao salvar jogo invalido")
+    void deveRetornarErrosDeValidacaoPadronizadosAoSalvarJogoInvalido() throws Exception {
+        JogoRequest request = new JogoRequest(
+                "",
+                "Descricao qualquer",
+                LocalDate.now(),
+                null,
+                12.0,
+                JogoStatus.JOGANDO,
+                false,
+                "Review",
+                -2,
+                java.util.List.of(),
+                java.util.List.of()
+        );
+
+        mockMvc.perform(post("/gamevault/jogo")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Existem campos invalidos na requisicao."))
+                .andExpect(jsonPath("$.fieldErrors.titulo").exists())
+                .andExpect(jsonPath("$.fieldErrors.nota").exists())
+                .andExpect(jsonPath("$.fieldErrors.horasJogadas").exists())
+                .andExpect(jsonPath("$.fieldErrors.generos").exists())
+                .andExpect(jsonPath("$.fieldErrors.plataformas").exists());
+    }
 }

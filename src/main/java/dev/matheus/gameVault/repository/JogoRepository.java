@@ -13,7 +13,9 @@ public interface JogoRepository extends JpaRepository<Jogo, Long> {
 
     Optional<Jogo> findByIdAndUsuarioId(Long id, Long usuarioId);
 
-    // Busca todos os jogos do usuario que contenham o gênero passado por parâmetro
-    List<Jogo> findByGenerosContainingAndUsuarioId(Genero genero, Long usuarioId);
+    boolean existsByUsuarioIdAndTituloIgnoreCase(Long usuarioId, String titulo);
 
+    boolean existsByUsuarioIdAndTituloIgnoreCaseAndIdNot(Long usuarioId, String titulo, Long id);
+
+    List<Jogo> findByGenerosContainingAndUsuarioId(Genero genero, Long usuarioId);
 }

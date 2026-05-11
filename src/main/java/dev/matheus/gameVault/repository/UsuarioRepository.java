@@ -7,6 +7,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Optional;
 
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
-    // Usado pelo Service de autenticação para validar as credenciais
     Optional<UserDetails> findUsuarioByEmail(String email);
+    boolean existsByEmailIgnoreCase(String email);
 }
